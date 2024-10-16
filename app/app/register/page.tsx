@@ -63,6 +63,15 @@ export default function Register() {
           </button>
         </form>
         <p className="mt-4">
+          ¿Olvidaste tu contraseña?{" "}
+          <a
+            href="/app/forgot-password"
+            className="text-blue-500 hover:underline"
+          >
+            Restablecer contraseña
+          </a>
+        </p>
+        <p className="mt-4">
           ¿Ya tienes una cuenta?{" "}
           <a href="/app" className="text-blue-500 hover:underline">
             Inicia sesión aquí
