@@ -1,3 +1,11 @@
+Documentación Propia
+
+Para hacer seed de la db cuando no hay usuarios :
+node --loader ts-node/esm --experimental-specifier-resolution=node seedAdmin.ts
+
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
