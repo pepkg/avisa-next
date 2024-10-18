@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "@/hooks/useTranslations";
+import LanguageSelector from "@/components/LanguageSelector";
 
 // Decodifica un token JWT manualmente
 function decodeJWT(token: string) {
@@ -24,6 +26,7 @@ interface DecodedToken {
 }
 
 export default function Dashboard() {
+  const { translations } = useTranslations();
   const [user, setUser] = useState({ name: "", role: "" });
   const router = useRouter();
 
@@ -33,8 +36,6 @@ export default function Dashboard() {
       router.push("/app"); // Redirige a login si no hay token
     } else {
       const decodedToken: DecodedToken = decodeJWT(token); // Usar la función manual
-      console.log("decoded token");
-      console.log(decodedToken);
       setUser({ name: decodedToken.name, role: decodedToken.role });
     }
   }, [router]);
@@ -47,19 +48,36 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Dashboard</h1>
-        <div>
+        <h1 className="text-xl font-bold">
+          {translations["dashboard_title"] || "Dashboard"}
+        </h1>
+        <div className="flex items-center">
+          <LanguageSelector />
           <span className="mr-4">
-            Usuario: {user.name} ({user.role})
+            {translations["user_placeholder"] || "Usuario"}: {user.name} (
+            {user.role})
           </span>
           <button className="btn btn-secondary" onClick={handleLogout}>
-            Logout
+            {translations["logout_button"] || "Logout"}
           </button>
         </div>
       </header>
 
       <main className="flex items-center justify-center h-full">
-        <h2 className="text-2xl font-bold">Bienvenido, {user.name}!</h2>
+        <h2 className="text-2xl font-bold">
+          {translations["login_welcome"] || "Bienvenido"}, {user.name}!
+        </h2>
+        <ul className="mt-4">
+          <li>
+            <a
+              href="/app/dashboard/translations"
+              className="text-blue-500 hover:underline"
+            >
+              {translations["translation_action_link"] ||
+                "Gestionar Traducciones"}
+            </a>
+          </li>
+        </ul>
       </main>
     </div>
   );

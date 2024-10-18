@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "@/hooks/useTranslations";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function ResetPassword() {
+  const { translations } = useTranslations();
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -25,7 +28,10 @@ export default function ResetPassword() {
     if (data.error) {
       setMessage(data.error);
     } else {
-      setMessage("Contraseña restablecida correctamente.");
+      setMessage(
+        translations["reset_ok_password"] ||
+          "Contraseña restablecida correctamente",
+      );
       router.push("/app"); // Redirigir a login
     }
   };
@@ -33,20 +39,25 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">Restablecer Contraseña</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          {translations["reset_password"] || "Restablecer Contraseña"}
+        </h1>
         <form onSubmit={handleSubmit}>
           <input
             type="password"
-            placeholder="Ingresa tu nueva contraseña"
+            placeholder={
+              translations["new_password"] || "Ingresa tu nueva contraseña"
+            }
             className="input input-bordered w-full mb-4"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <button type="submit" className="btn btn-primary w-full">
-            Restablecer Contraseña
+            {translations["new_password"] || "Restablecer Contraseña"}
           </button>
         </form>
         {message && <p className="mt-4 text-red-500">{message}</p>}
+        <LanguageSelector />
       </div>
     </div>
   );

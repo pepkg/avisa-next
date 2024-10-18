@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "@/hooks/useTranslations";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function Register() {
+  const { translations } = useTranslations();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,48 +38,51 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">Regístrate</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          {translations["register_here"] || "Regístrate"}
+        </h1>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Nombre"
+            placeholder={translations["name_placeholder"] || "Nombre"}
             className="input input-bordered w-full mb-4"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
             type="email"
-            placeholder="Email"
+            placeholder={translations["email_placeholder"] || "Email"}
             className="input input-bordered w-full mb-4"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type="password"
-            placeholder="Contraseña"
+            placeholder={translations["passsword_placeholder"] || "Contraseña"}
             className="input input-bordered w-full mb-4"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <button type="submit" className="btn btn-primary w-full">
-            Registrarse
+            {translations["register_here"] || "Regístrate aquí"}
           </button>
         </form>
         <p className="mt-4">
-          ¿Olvidaste tu contraseña?{" "}
+          {translations["forgot_password"] || "¿Olvidaste la contraseña?"}
           <a
             href="/app/forgot-password"
             className="text-blue-500 hover:underline"
           >
-            Restablecer contraseña
+            {translations["reset_password"] || "Restablecer contraseña"}
           </a>
         </p>
         <p className="mt-4">
-          ¿Ya tienes una cuenta?{" "}
+          {translations["existing_account"] || "¿Ya tienes una cuenta?"}{" "}
           <a href="/app" className="text-blue-500 hover:underline">
-            Inicia sesión aquí
+            {translations["login_button"] || "Iniciar sesión"}
           </a>
         </p>
+        <LanguageSelector />
       </div>
     </div>
   );
