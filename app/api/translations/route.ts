@@ -17,3 +17,22 @@ export async function POST(req: Request) {
   await newTranslation.save();
   return NextResponse.json(newTranslation);
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  await dbConnect();
+  const { id } = params;
+
+  try {
+    await Translation.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Translation deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { error: "Failed to delete translation" },
+      { status: 500 },
+    );
+  }
+}

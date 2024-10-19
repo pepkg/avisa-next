@@ -1,84 +1,61 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import DashboardLayout from "./DashboardLayout";
 import { useTranslations } from "@/hooks/useTranslations";
-import LanguageSelector from "@/components/LanguageSelector";
-
-// Decodifica un token JWT manualmente
-function decodeJWT(token: string) {
-  const base64Url = token.split(".")[1];
-  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-  const jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split("")
-      .map(function (c) {
-        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-      })
-      .join(""),
-  );
-  return JSON.parse(jsonPayload);
-}
-
-interface DecodedToken {
-  name: string;
-  role: string;
-}
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function Dashboard() {
   const { translations } = useTranslations();
-  const [user, setUser] = useState({ name: "", role: "" });
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/app"); // Redirige a login si no hay token
-    } else {
-      const decodedToken: DecodedToken = decodeJWT(token); // Usar la función manual
-      setUser({ name: decodedToken.name, role: decodedToken.role });
+    if (searchParams.get("success") === "true") {
+      setShowSuccessMessage(true);
     }
-  }, [router]);
+  }, [searchParams]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/app");
+  const handleDismissMessage = () => {
+    setShowSuccessMessage(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">
-          {translations["dashboard_title"] || "Dashboard"}
-        </h1>
-        <div className="flex items-center">
-          <LanguageSelector />
-          <span className="mr-4">
-            {translations["user_placeholder"] || "Usuario"}: {user.name} (
-            {user.role})
-          </span>
-          <button className="btn btn-secondary" onClick={handleLogout}>
-            {translations["logout_button"] || "Logout"}
+    <DashboardLayout>
+      {showSuccessMessage && (
+        <div className="bg-green-100 text-green-800 p-4 rounded mb-4">
+          <p>{translations["success_message"] || "Operación exitosa."}</p>
+          <button className="text-red-500 ml-4" onClick={handleDismissMessage}>
+            {translations["dismiss_button"] || "Cerrar"}
           </button>
         </div>
-      </header>
+      )}
 
-      <main className="flex items-center justify-center h-full">
-        <h2 className="text-2xl font-bold">
-          {translations["login_welcome"] || "Bienvenido"}, {user.name}!
-        </h2>
-        <ul className="mt-4">
-          <li>
-            <a
-              href="/app/dashboard/translations"
-              className="text-blue-500 hover:underline"
-            >
-              {translations["translation_action_link"] ||
-                "Gestionar Traducciones"}
-            </a>
-          </li>
-        </ul>
-      </main>
-    </div>
+      <h2 className="text-2xl font-bold mb-4">
+        {translations["dashboard_main_title"] || "Secciones del Dashboard"}
+      </h2>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="border p-4 rounded shadow">
+          <h3 className="text-xl font-bold mb-2">
+            {translations["translations_section"] || "Traducciones"}
+          </h3>
+          <a
+            href="/app/dashboard/translations"
+            className="text-blue-500 hover:underline"
+          >
+            {translations["translation_action_link"] ||
+              "Ver lista de traducciones"}
+          </a>
+          <a
+            href="/app/dashboard/translations/edit/new"
+            className="btn btn-primary mt-4 block"
+          >
+            {translations["add_translation_button"] ||
+              "Agregar nueva traducción"}
+          </a>
+        </div>
+        {/* Aquí puedes agregar más secciones del dashboard */}
+      </div>
+    </DashboardLayout>
   );
 }
