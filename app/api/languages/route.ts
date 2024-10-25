@@ -17,3 +17,22 @@ export async function POST(req: Request) {
   await newLanguage.save();
   return NextResponse.json(newLanguage);
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  await dbConnect();
+  const { id } = params;
+
+  try {
+    await Language.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Language deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { error: "Failed to delete language" },
+      { status: 500 },
+    );
+  }
+}

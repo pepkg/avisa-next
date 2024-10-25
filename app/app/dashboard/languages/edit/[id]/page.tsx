@@ -6,14 +6,10 @@ import { useTranslations } from "@/hooks/useTranslations";
 import DashboardLayout from "../../../DashboardLayout";
 import MultilangTextField from "@/components/MultilangTextField";
 
-export default function EditTranslation({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const [translation, setTranslation] = useState({
-    label: "",
-    translations: { en: "", es: "" }, // Inicializar con los idiomas disponibles
+export default function EditLanguage({ params }: { params: { id: string } }) {
+  const [language, setLanguage] = useState({
+    iso: "",
+    names: { en: "", es: "" },
   });
   const [languages, setLanguages] = useState<{ iso: string }[]>([]);
   const { translations: translationLiterals } = useTranslations();
@@ -25,13 +21,12 @@ export default function EditTranslation({
     fetch("/api/languages")
       .then((res) => res.json())
       .then((data) => setLanguages(data));
-
-    // Si es edición, cargar la traducción
+    // Cargar el item si es una edición
     if (params.id !== "new") {
-      fetch(`/api/translations/${params.id}`)
+      fetch(`/api/languages/${params.id}`)
         .then((res) => res.json())
         .then((data) => {
-          setTranslation(data);
+          setLanguage(data);
           setIsEdit(true);
         });
     }
@@ -39,24 +34,25 @@ export default function EditTranslation({
 
   const handleSave = async () => {
     const method = isEdit ? "PUT" : "POST";
-    const res = await fetch(`/api/translations/${isEdit ? params.id : ""}`, {
+    const res = await fetch(`/api/languages/${isEdit ? params.id : ""}`, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(translation),
+      body: JSON.stringify(language),
     });
 
     if (res.ok) {
+      // Redirigir al listado con un mensaje de éxito
       const successMessage = isEdit ? "edit_success=true" : "add_success=true";
-      router.push(`/app/dashboard/translations?${successMessage}`);
+      router.push(`/app/dashboard/languages?${successMessage}`);
     }
   };
 
   // Función para manejar los cambios en los campos de traducción
   const handleTranslationChange = (iso: string, value: string) => {
-    setTranslation({
-      ...translation,
-      translations: {
-        ...translation.translations,
+    setLanguage({
+      ...language,
+      names: {
+        ...language.names,
         [iso]: value, // Actualiza el valor en el idioma específico
       },
     });
@@ -66,39 +62,32 @@ export default function EditTranslation({
     <DashboardLayout>
       <h1 className="text-2xl font-bold mb-4">
         {isEdit
-          ? translationLiterals["translations_edit_title"] ||
-            "Editar Traducción"
-          : translationLiterals["add_translation_button"] ||
-            "Agregar Nueva Traducción"}
+          ? translationLiterals["languages_edit_title"] || "Editar Idioma"
+          : translationLiterals["add_language_button"] ||
+            "Agregar Nuevo Idioma"}
       </h1>
       <div className="mb-4">
-        {/* Campo para la etiqueta */}
         <input
           type="text"
-          placeholder="Etiqueta"
-          value={translation.label}
-          onChange={(e) =>
-            setTranslation({ ...translation, label: e.target.value })
-          }
+          placeholder="Código ISO"
+          value={language.iso}
+          onChange={(e) => setLanguage({ ...language, iso: e.target.value })}
           className="input input-bordered w-full mb-2"
         />
-
         {/* Usamos el componente MultilangTextField para el campo de traducción */}
         <MultilangTextField
-          translations={translation.translations}
+          translations={language.names}
           languages={languages} // Lista de idiomas disponibles
           onChange={handleTranslationChange} // Función para actualizar la traducción
           fieldLabel={
             translationLiterals["translations_field"] || "Traducciones"
           } // Literal traducido como título de la sección
         />
-
         <button className="btn btn-primary" onClick={handleSave}>
           {isEdit
-            ? translationLiterals["translations_edit_title"] ||
-              "Editar Traducción"
-            : translationLiterals["add_translation_button"] ||
-              "Agregar Nueva Traducción"}
+            ? translationLiterals["languages_edit_title"] || "Editar Idioma"
+            : translationLiterals["add_language_button"] ||
+              "Agregar Nuevo Idioma"}
         </button>
       </div>
     </DashboardLayout>

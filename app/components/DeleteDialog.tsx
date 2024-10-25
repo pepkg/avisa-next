@@ -29,7 +29,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({
     } else {
       console.error(
         translationLiterals["delete_error_message"] ||
-          "Error al eliminar la traducción.",
+          "Error al eliminar el registro.",
       );
     }
   };
@@ -39,7 +39,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({
       <div className="bg-white p-6 rounded shadow-lg">
         <p>
           {translationLiterals["delete_confirmation"] ||
-            "¿Estás seguro de que quieres eliminar esta traducción?"}
+            "¿Estás seguro de que quieres eliminar este registro?"}
         </p>
         <div className="mt-4">
           <button className="btn btn-danger mr-4" onClick={handleConfirmDelete}>

@@ -54,6 +54,24 @@ export default function Dashboard() {
               "Agregar nueva traducción"}
           </a>
         </div>
+
+        <div className="border p-4 rounded shadow">
+          <h3 className="text-xl font-bold mb-2">
+            {translations["languages_section"] || "Idiomas"}
+          </h3>
+          <a
+            href="/app/dashboard/languages"
+            className="text-blue-500 hover:underline"
+          >
+            {translations["language_action_link"] || "Ver lista de idiomas"}
+          </a>
+          <a
+            href="/app/dashboard/languages/edit/new"
+            className="btn btn-primary mt-4 block"
+          >
+            {translations["add_language_button"] || "Agregar nuevo idioma"}
+          </a>
+        </div>
         {/* Aquí puedes agregar más secciones del dashboard */}
       </div>
     </DashboardLayout>

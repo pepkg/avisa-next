@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -10,63 +9,55 @@ import BatchDeleteDialog from "@/components/BatchDeleteDialog";
 import DeleteDialog from "@/components/DeleteDialog";
 import DataTable from "@/components/DataTable";
 
-interface Translation {
-  _id: string;
-  label: string;
-  translations: Record<string, string>;
-}
-
 interface Language {
   _id: string;
   iso: string;
   names: Record<string, string>;
+  published: boolean;
 }
 
-export default function Translations() {
-  const [items, setItems] = useState<Translation[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Translation[]>([]);
+export default function Languages() {
+  const [items, setItems] = useState<Language[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Language[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const { translations: translationLiterals } = useTranslations();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState<string | null>(null);
   const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [sortBy, setSortBy] = useState<keyof Translation>("label");
+  const [sortBy, setSortBy] = useState<keyof Language>("iso");
   const [activeTab, setActiveTab] = useState<{ [key: string]: string }>({});
   const router = useRouter();
 
-  // Obtener idioma del navegador o seleccionado por el usuario
   const defaultLanguage =
-    localStorage.getItem("language") || navigator.language.slice(0, 2); // 'en', 'es', etc.
+    localStorage.getItem("language") || navigator.language.slice(0, 2);
 
   useEffect(() => {
-    fetch("/api/translations")
+    fetch("/api/languages")
       .then((res) => res.json())
       .then((data) => {
+        setLanguages(data);
         setItems(data);
-        setFilteredItems(data);
-
-        // Configurar el tab activo por defecto basado en el idioma del navegador
         const initialActiveTabs: { [key: string]: string } = {};
         data.forEach((item: Language) => {
-          initialActiveTabs[item._id] = defaultLanguage; // Usamos el idioma por defecto del usuario
+          initialActiveTabs[item._id] = defaultLanguage;
         });
         setActiveTab(initialActiveTabs);
       });
-
-    fetch("/api/languages")
-      .then((res) => res.json())
-      .then((data) => setLanguages(data));
   }, [defaultLanguage]);
 
-  const handleSort = (column: keyof Translation | string) => {
+  useEffect(() => {
+    setFilteredItems(items);
+  }, [items]);
+
+  const handleSort = (column: keyof Language | string) => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc";
-    setSortBy(column as keyof Translation);
+    setSortBy(column as keyof Language);
     setSortOrder(newOrder);
 
     const sortedItems = [...filteredItems].sort((a, b) => {
-      const aValue = column === "label" ? a.label : a.translations.en;
-      const bValue = column === "label" ? b.label : b.translations.en;
+      const aValue = column === "iso" ? a.iso : a.names.en;
+      const bValue = column === "iso" ? b.iso : b.names.en;
 
       return aValue < bValue
         ? newOrder === "asc"
@@ -87,49 +78,86 @@ export default function Translations() {
     }));
   };
 
+  const updateLocalPublishedStatus = (languageId: string) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item._id === languageId
+          ? { ...item, published: !item.published }
+          : item,
+      ),
+    );
+  };
+
+  const syncWithDatabase = async (
+    languageId: string,
+    newPublishedStatus: boolean,
+  ) => {
+    try {
+      const response = await fetch(`/api/languages/${languageId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published: newPublishedStatus }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Error al actualizar en la base de datos:",
+          response.status,
+        );
+        updateLocalPublishedStatus(languageId);
+      }
+    } catch (error) {
+      console.error("Error al hacer la solicitud PUT:", error);
+      updateLocalPublishedStatus(languageId);
+    }
+  };
+
+  // Función principal para el cambio de estado de publicación
+  const handlePublicToggle = (language: Language) => {
+    updateLocalPublishedStatus(language._id);
+    syncWithDatabase(language._id, !language.published);
+  };
+
   return (
     <DashboardLayout>
       <SuccessMessage
-        modelKey="translations"
+        modelKey="languages"
         translationLiterals={translationLiterals}
       />
 
       <h1 className="text-2xl font-bold mb-4">
-        {translationLiterals["translations_list_title"] ||
-          "Gestionar Traducciones"}
+        {translationLiterals["languages_list_title"] || "Gestionar Idiomas"}
       </h1>
 
       <TableHeaderControls
         addButtonText={
-          translationLiterals["add_translation_button"] ||
-          "Agregar nueva traducción"
+          translationLiterals["add_language_button"] || "Agregar nuevo idioma"
         }
         resetButtonText={translationLiterals["reset_button"] || "Reset"}
-        addButtonHref="/app/dashboard/translations/edit/new"
+        addButtonHref="/app/dashboard/languages/edit/new"
         searchPlaceholder={
           translationLiterals["search_placeholder"] || "Buscar por literal"
         }
         onFilter={(searchTerm) =>
           setFilteredItems(
             items.filter((filteredItem) =>
-              filteredItem.label.toLowerCase().includes(searchTerm),
+              filteredItem.iso.toLowerCase().includes(searchTerm),
             ),
           )
         }
         onReset={() => {
           setFilteredItems(items);
-          setSortBy("label");
+          setSortBy("iso");
           setSortOrder("asc");
         }}
       />
 
-      <DataTable<Translation>
+      <DataTable<Language>
         data={filteredItems}
         columns={[
           {
-            key: "label",
-            label:
-              translationLiterals["label_column"] || "Etiqueta del literal",
+            key: "iso",
+            label: translationLiterals["iso_column"] || "Código ISO",
             sortable: true,
           },
           {
@@ -137,14 +165,32 @@ export default function Translations() {
             label: translationLiterals["names_column"] || "Nombre del Idioma",
             sortable: true,
             multilang: true,
-            multilangField: "translations", // Especificamos que el campo multilenguaje es "names"
+            multilangField: "names",
+          },
+          {
+            key: "published",
+            label:
+              translationLiterals["published_column"] ||
+              "Estado de publicación",
+            render: (language) => (
+              <button
+                onClick={() => handlePublicToggle(language)}
+                className={`px-4 py-2 rounded ${
+                  language.published ? "bg-green-500" : "bg-yellow-500"
+                } text-white`}
+              >
+                {language.published
+                  ? translationLiterals["published_state"]
+                  : translationLiterals["draft_state"]}
+              </button>
+            ),
           },
         ]}
         actions={[
           {
             label: translationLiterals["edit_button"] || "Editar",
             onClick: (item) =>
-              router.push(`/app/dashboard/translations/edit/${item._id}`),
+              router.push(`/app/dashboard/languages/edit/${item._id}`),
           },
           {
             label: translationLiterals["delete_button"] || "Eliminar",
@@ -167,7 +213,7 @@ export default function Translations() {
         onShowDialog={() => setShowBatchDeleteDialog(true)}
         onConfirmBatchDelete={async () => {
           const promises = selectedItems.map((id) =>
-            fetch(`/api/translations/${id}`, {
+            fetch(`/api/languages/${id}`, {
               method: "DELETE",
             }),
           );
@@ -205,11 +251,11 @@ export default function Translations() {
           );
           setShowDeleteDialog(null);
           setSelectedItems([]);
-          router.push("/app/dashboard/translations?success=true");
+          router.push("/app/dashboard/languages?success=true");
         }}
         onCancelDelete={() => setShowDeleteDialog(null)}
         translationLiterals={translationLiterals}
-        deleteUrl="/api/translations"
+        deleteUrl="/api/languages"
       />
     </DashboardLayout>
   );

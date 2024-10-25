@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 interface Language {
   iso: string;
   names: { [key: string]: string };
+  published: boolean;
 }
 
 export default function LanguageSelector() {
@@ -15,7 +16,11 @@ export default function LanguageSelector() {
     // Obtener los lenguajes desde el backend
     fetch("/api/languages")
       .then((res) => res.json())
-      .then((data) => setLanguages(data));
+      .then((data) => {
+        // Filtrar solo los lenguajes que son públicos
+        const publicLanguages = data.filter((lang: Language) => lang.published);
+        setLanguages(publicLanguages);
+      });
 
     // Detectar el idioma del navegador o usar el guardado en localStorage
     const browserLanguage = navigator.language.slice(0, 2);
